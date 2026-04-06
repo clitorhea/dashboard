@@ -1,0 +1,6 @@
+data/
+node_modules/
+frontend/dist/
+*.db
+*.db-journal
+.env
