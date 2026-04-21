@@ -24,6 +24,9 @@ func NewClient() (*Client, error) {
 }
 
 func (c *Client) ListContainers(ctx context.Context) ([]types.Container, error) {
+	if ctx == nil {
+		ctx = context.Background()
+	}
 	return c.cli.ContainerList(ctx, container.ListOptions{All: true})
 }
 

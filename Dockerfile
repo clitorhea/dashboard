@@ -11,10 +11,14 @@ FROM golang:1.23.8-alpine AS backend
 RUN apk add --no-cache gcc musl-dev
 WORKDIR /app
 ENV GOTOOLCHAIN=local
-COPY backend/go.mod backend/go.sum ./
-RUN go mod download
+# Copy go.mod first for better layer caching on unchanged deps
+COPY backend/go.mod backend/go.sum* ./
+# Download what we have; tidy will add any new entries after sources are copied
+RUN go mod download 2>/dev/null || true
+# Copy all source files
 COPY backend/ ./
-RUN CGO_ENABLED=1 go build -o dashboard .
+# Run tidy to add any new dependencies (e.g. gopsutil) and build
+RUN go mod tidy && CGO_ENABLED=1 go build -o dashboard .
 
 # Stage 3: Final image
 FROM alpine:3.20

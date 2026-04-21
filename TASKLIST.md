@@ -69,3 +69,20 @@
 - [x] Add environment variable / secrets documentation
 - [ ] Test full deployment on target NAS
 - [x] Write user-facing README with setup instructions
+
+## Phase 11: Bug Fixes & Improvements
+- [x] Add `PUT /api/auth/password` endpoint
+- [x] Wire Settings page to real password change endpoint
+- [x] Seed built-in templates from `templates/` dir on startup
+- [x] Fix Docker log demux using `stdcopy.StdCopy` (was garbled before)
+- [x] Add session cleanup goroutine (runs every hour)
+- [x] Add login rate limiter (5 failures / min per IP)
+- [x] Add `Secure` flag to session cookies
+- [x] Add WebSocket origin validation
+- [x] Fix path traversal in deploy endpoint
+- [x] Real host CPU/RAM/disk stats via `gopsutil/v3`
+- [x] Confirmation dialogs on Stop/Restart container actions
+- [x] Notification system — background polling for container health
+- [x] Notification badge in Navbar
+- [x] SPA 404 fallback for deep links
+- [x] Add 6 more service templates (Jellyfin, Vaultwarden, NPM, Immich, Gitea, Uptime Kuma)

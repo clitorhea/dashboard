@@ -2,11 +2,13 @@ package handler
 
 import (
 	"net/http"
-	"os"
-	"runtime"
 	"time"
 
 	"github.com/rhea/nas-dashboard/docker"
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v3/disk"
+	"github.com/shirou/gopsutil/v3/host"
+	"github.com/shirou/gopsutil/v3/mem"
 )
 
 type SystemHandler struct {
@@ -18,24 +20,44 @@ func NewSystemHandler(d *docker.Client) *SystemHandler {
 	return &SystemHandler{docker: d, startTime: time.Now()}
 }
 
-type systemInfo struct {
-	Hostname string `json:"hostname"`
-	OS       string `json:"os"`
-	Arch     string `json:"arch"`
-	CPUs     int    `json:"cpus"`
-	Uptime   string `json:"uptime"`
-}
-
 func (h *SystemHandler) Info(w http.ResponseWriter, r *http.Request) {
-	hostname, _ := os.Hostname()
-	info := systemInfo{
-		Hostname: hostname,
-		OS:       runtime.GOOS,
-		Arch:     runtime.GOARCH,
-		CPUs:     runtime.NumCPU(),
-		Uptime:   time.Since(h.startTime).Round(time.Second).String(),
+	// Real host memory
+	memStat, _ := mem.VirtualMemoryWithContext(r.Context())
+
+	// Real CPU usage (sample over 200ms)
+	cpuPcts, _ := cpu.PercentWithContext(r.Context(), 200*time.Millisecond, false)
+	cpuPct := 0.0
+	if len(cpuPcts) > 0 {
+		cpuPct = cpuPcts[0]
 	}
-	writeJSON(w, http.StatusOK, info)
+
+	// Disk usage of the root mount
+	diskStat, _ := disk.UsageWithContext(r.Context(), "/")
+
+	// Host uptime
+	uptimeSecs, _ := host.UptimeWithContext(r.Context())
+	hostInfo, _ := host.InfoWithContext(r.Context())
+
+	hostname := ""
+	platform := ""
+	if hostInfo != nil {
+		hostname = hostInfo.Hostname
+		platform = hostInfo.Platform + " " + hostInfo.PlatformVersion
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"hostname":          hostname,
+		"platform":          platform,
+		"uptime_seconds":    uptimeSecs,
+		"dashboard_uptime":  time.Since(h.startTime).Round(time.Second).String(),
+		"cpu_percent":       cpuPct,
+		"mem_total":         memStat.Total,
+		"mem_used":          memStat.Used,
+		"mem_percent":       memStat.UsedPercent,
+		"disk_total":        diskStat.Total,
+		"disk_used":         diskStat.Used,
+		"disk_percent":      diskStat.UsedPercent,
+	})
 }
 
 func (h *SystemHandler) DockerInfo(w http.ResponseWriter, r *http.Request) {

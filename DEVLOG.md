@@ -90,3 +90,36 @@
 - Test full Docker build + deploy on NAS
 - Add template seeding on startup (load from `templates/` dir into SQLite)
 - Add password change endpoint
+
+---
+
+## 2026-04-21 — Session 2: Bug Fixes, Security & New Features
+
+### What was done
+
+**Bug Fixes**
+- Fixed template seeding: `main.go` now reads all `.yaml` files from `templates/` and calls `db.SeedTemplates()` on startup with rich metadata (name, description, category, icon)
+- Fixed Docker log demux: replaced naive 8-byte slice with `stdcopy.StdCopy()` — logs no longer garbled
+- `PUT /api/auth/password` endpoint added; Settings page now fully functional
+- SPA fallback: file server now serves `index.html` for any unrecognized path, fixing potential deep-link 404s
+
+**Security**
+- Session cookies now have `Secure: true` (required for Cloudflare HTTPS)
+- WebSocket `CheckOrigin` now validates the `Origin` header matches the request `Host`
+- Login rate limiter: 5 failed attempts per IP per minute blocks further attempts
+- Deploy endpoint: `service_name` is now validated against a resolved base path to prevent path traversal
+
+**New Features**
+- **Real host stats** via `github.com/shirou/gopsutil/v3`: CPU%, RAM used/total, disk used/total with animated progress bars on the Dashboard
+- **Notification system**: background goroutine polls container states every 30s; alerts shown on Dashboard when a container stops unexpectedly; navbar shows a pulsing badge count
+- **Session cleanup goroutine**: expired sessions purged every hour
+- **6 new service templates**: Jellyfin, Vaultwarden, Nginx Proxy Manager, Immich, Gitea, Uptime Kuma
+- **Confirmation dialogs** on Stop/Restart container actions in ContainerCard
+
+**Infrastructure**
+- Dockerfile updated to run `go mod tidy` before build so gopsutil is resolved without needing local Go
+- `go.mod` updated with gopsutil/v3 v3.24.5 dependency
+
+### Known issues / TODOs
+- Full Docker build + deploy still pending on real NAS hardware
+- Template seeding is idempotent (skips if templates table non-empty) — to re-seed, clear the templates table first

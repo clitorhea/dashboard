@@ -106,6 +106,23 @@ func (d *DB) DeleteSession(token string) error {
 	return err
 }
 
+// CleanupExpiredSessions removes all sessions that have passed their expiry time.
+// Returns the number of rows deleted.
+func (d *DB) CleanupExpiredSessions() (int64, error) {
+	result, err := d.Exec("DELETE FROM sessions WHERE expires_at < datetime('now')")
+	if err != nil {
+		return 0, err
+	}
+	n, _ := result.RowsAffected()
+	return n, nil
+}
+
+// UpdatePassword sets a new bcrypt-hashed password for the given user ID.
+func (d *DB) UpdatePassword(userID int64, hashedPassword string) error {
+	_, err := d.Exec("UPDATE users SET password = ? WHERE id = ?", hashedPassword, userID)
+	return err
+}
+
 // GetUserByID looks up a user by ID.
 func (d *DB) GetUserByID(id int64) (*User, error) {
 	u := &User{}

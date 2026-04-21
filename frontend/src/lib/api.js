@@ -30,6 +30,8 @@ export const api = {
     request('/auth/me'),
   setup: (username, password) =>
     request('/auth/setup', { method: 'POST', body: JSON.stringify({ username, password }) }),
+  changePassword: (current_password, new_password) =>
+    request('/auth/password', { method: 'PUT', body: JSON.stringify({ current_password, new_password }) }),
 
   // Containers
   containers: () => request('/containers'),
@@ -52,4 +54,8 @@ export const api = {
   templates: () => request('/templates'),
   template: (id) => request(`/templates/${id}`),
   deploy: (data) => request('/services/deploy', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Notifications
+  notifications: () => request('/notifications'),
+  dismissNotification: (id) => request(`/notifications/${id}/dismiss`, { method: 'POST' }),
 };

@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/rhea/nas-dashboard/db"
 	"github.com/rhea/nas-dashboard/docker"
@@ -85,8 +86,14 @@ func (h *TemplateHandler) Deploy(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create service directory
-	serviceDir := filepath.Join("./data/services", req.ServiceName)
+	// Create service directory with path traversal protection
+	baseDir, _ := filepath.Abs("./data/services")
+	serviceDir := filepath.Join(baseDir, req.ServiceName)
+	// Ensure the resolved path is still inside baseDir
+	if !strings.HasPrefix(serviceDir+string(filepath.Separator), baseDir+string(filepath.Separator)) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid service name"})
+		return
+	}
 	if err := os.MkdirAll(serviceDir, 0755); err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create service directory"})
 		return

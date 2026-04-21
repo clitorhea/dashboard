@@ -1,5 +1,5 @@
 <script>
-  import { user } from '../lib/stores.js';
+  import { user, unreadCount } from '../lib/stores.js';
   import { api } from '../lib/api.js';
 
   let currentPath = $state(window.location.hash.replace('#', '') || '/');
@@ -31,6 +31,9 @@
 <nav class="sidebar">
   <div class="logo">
     <h2>NAS Dashboard</h2>
+    {#if $unreadCount > 0}
+      <span class="notif-badge" title="{$unreadCount} alert{$unreadCount > 1 ? 's' : ''}">{$unreadCount}</span>
+    {/if}
   </div>
 
   <ul class="nav-links">
@@ -39,6 +42,9 @@
         <a href="#{link.path}" class:active={currentPath === link.path}>
           <span class="icon">{link.icon}</span>
           {link.label}
+          {#if link.path === '/' && $unreadCount > 0}
+            <span class="link-badge">{$unreadCount}</span>
+          {/if}
         </a>
       </li>
     {/each}
@@ -67,11 +73,35 @@
   .logo {
     padding: 1.5rem;
     border-bottom: 1px solid #30363d;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .logo h2 {
     font-size: 1.1rem;
     color: #58a6ff;
+    flex: 1;
+  }
+
+  .notif-badge {
+    background: #da3633;
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
   }
 
   .nav-links {
@@ -105,6 +135,21 @@
     font-size: 1.1rem;
     width: 1.5rem;
     text-align: center;
+  }
+
+  .link-badge {
+    margin-left: auto;
+    background: #da3633;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3px;
   }
 
   .nav-footer {

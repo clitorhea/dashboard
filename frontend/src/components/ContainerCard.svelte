@@ -25,6 +25,9 @@
   }
 
   async function doAction(action) {
+    if (action === 'stop' && !confirm(`Stop "${getName()}"?`)) return;
+    if (action === 'restart' && !confirm(`Restart "${getName()}"?`)) return;
+
     actionLoading = true;
     try {
       if (action === 'start') await api.startContainer(container.Id);

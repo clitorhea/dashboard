@@ -7,6 +7,7 @@
   let confirmPassword = $state('');
   let message = $state('');
   let error = $state('');
+  let loading = $state(false);
 
   async function changePassword(e) {
     e.preventDefault();
@@ -23,9 +24,18 @@
       return;
     }
 
-    // For now, re-login with current password to verify, then we'd need a dedicated endpoint
-    // This is a placeholder — the backend would need a PUT /api/auth/password endpoint
-    message = 'Password change not yet implemented on the backend';
+    loading = true;
+    try {
+      await api.changePassword(currentPassword, newPassword);
+      message = 'Password updated successfully!';
+      currentPassword = '';
+      newPassword = '';
+      confirmPassword = '';
+    } catch (e) {
+      error = e.message;
+    } finally {
+      loading = false;
+    }
   }
 </script>
 
@@ -52,17 +62,19 @@
 
       <label>
         Current Password
-        <input type="password" bind:value={currentPassword} required />
+        <input type="password" bind:value={currentPassword} required autocomplete="current-password" />
       </label>
       <label>
         New Password
-        <input type="password" bind:value={newPassword} required />
+        <input type="password" bind:value={newPassword} required autocomplete="new-password" />
       </label>
       <label>
         Confirm New Password
-        <input type="password" bind:value={confirmPassword} required />
+        <input type="password" bind:value={confirmPassword} required autocomplete="new-password" />
       </label>
-      <button type="submit">Update Password</button>
+      <button type="submit" disabled={loading}>
+        {loading ? 'Updating…' : 'Update Password'}
+      </button>
     </form>
   </div>
 
@@ -70,7 +82,7 @@
     <h2>About</h2>
     <div class="info-row">
       <span class="label">Version</span>
-      <span class="value">0.1.0</span>
+      <span class="value">0.2.0</span>
     </div>
   </div>
 </div>
@@ -132,7 +144,11 @@
     cursor: pointer;
     font-size: 0.85rem;
     margin-top: 0.5rem;
+    transition: background 0.15s;
   }
+
+  button:hover:not(:disabled) { background: #2ea043; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
 
   .error {
     color: #f85149;
